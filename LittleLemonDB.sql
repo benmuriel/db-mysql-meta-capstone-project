@@ -7,6 +7,7 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,N
 -- -----------------------------------------------------
 -- Schema LittleLemonDB
 -- -----------------------------------------------------
+DROP SCHEMA IF EXISTS `LittleLemonDB` ;
 
 -- -----------------------------------------------------
 -- Schema LittleLemonDB
@@ -15,9 +16,11 @@ CREATE SCHEMA IF NOT EXISTS `LittleLemonDB` DEFAULT CHARACTER SET utf8 ;
 USE `LittleLemonDB` ;
 
 -- -----------------------------------------------------
--- Table `LittleLemonDB`.`customer`
+-- Table `LittleLemonDB`.`customers`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`customer` (
+DROP TABLE IF EXISTS `LittleLemonDB`.`customers` ;
+
+CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`customers` (
   `customer_id` INT NOT NULL,
   `name` VARCHAR(45) NOT NULL,
   `mail` VARCHAR(45) NULL,
@@ -27,9 +30,11 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `LittleLemonDB`.`booking`
+-- Table `LittleLemonDB`.`bookings`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`booking` (
+DROP TABLE IF EXISTS `LittleLemonDB`.`bookings` ;
+
+CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`bookings` (
   `booking_id` INT NOT NULL AUTO_INCREMENT,
   `booking_date` DATE NOT NULL,
   `table_number` INT UNSIGNED NOT NULL,
@@ -38,26 +43,51 @@ CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`booking` (
   INDEX `fk_booking_customer_idx` (`customer_id` ASC) VISIBLE,
   CONSTRAINT `fk_booking_customer`
     FOREIGN KEY (`customer_id`)
-    REFERENCES `LittleLemonDB`.`customer` (`customer_id`)
+    REFERENCES `LittleLemonDB`.`customers` (`customer_id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `LittleLemonDB`.`order`
+-- Table `LittleLemonDB`.`menus`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`order` (
+DROP TABLE IF EXISTS `LittleLemonDB`.`menus` ;
+
+CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`menus` (
+  `menu_id` INT NOT NULL AUTO_INCREMENT,
+  `menu_name` VARCHAR(255) NOT NULL,
+  `price` DECIMAL(9) UNSIGNED NOT NULL DEFAULT 0,
+  `category` VARCHAR(45) NULL,
+  `cuisine` VARCHAR(45) NOT NULL,
+  PRIMARY KEY (`menu_id`),
+  UNIQUE INDEX `title_UNIQUE` (`menu_name` ASC) VISIBLE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `LittleLemonDB`.`orders`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `LittleLemonDB`.`orders` ;
+
+CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`orders` (
   `order_id` INT NOT NULL AUTO_INCREMENT,
   `order_date` DATE NOT NULL,
   `quantity` INT UNSIGNED NOT NULL DEFAULT 1,
   `total_cost` DECIMAL(9) UNSIGNED NOT NULL DEFAULT 0,
-  `booking_id` INT NULL,
+  `menu_id` INT NOT NULL,
+  `customer_id` INT NOT NULL,
   PRIMARY KEY (`order_id`),
-  INDEX `fk_order_booking_idx` (`booking_id` ASC) VISIBLE,
-  CONSTRAINT `fk_order_booking`
-    FOREIGN KEY (`booking_id`)
-    REFERENCES `LittleLemonDB`.`booking` (`booking_id`)
+  INDEX `fk_order_menu_idx` (`menu_id` ASC) VISIBLE,
+  INDEX `fk_order_customer_idx` (`customer_id` ASC) VISIBLE,
+  CONSTRAINT `fk_order_menu`
+    FOREIGN KEY (`menu_id`)
+    REFERENCES `LittleLemonDB`.`menus` (`menu_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_order_customer`
+    FOREIGN KEY (`customer_id`)
+    REFERENCES `LittleLemonDB`.`customers` (`customer_id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
@@ -66,6 +96,8 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `LittleLemonDB`.`order_delivery_status`
 -- -----------------------------------------------------
+DROP TABLE IF EXISTS `LittleLemonDB`.`order_delivery_status` ;
+
 CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`order_delivery_status` (
   `delivery_id` INT NOT NULL AUTO_INCREMENT,
   `delivery_date` DATE NOT NULL,
@@ -75,58 +107,45 @@ CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`order_delivery_status` (
   INDEX `fk_delivery_status_order_idx` (`order_id` ASC) VISIBLE,
   CONSTRAINT `fk_delivery_status_order`
     FOREIGN KEY (`order_id`)
-    REFERENCES `LittleLemonDB`.`order` (`order_id`)
+    REFERENCES `LittleLemonDB`.`orders` (`order_id`)
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `LittleLemonDB`.`menu`
+-- Table `LittleLemonDB`.`staffs`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`menu` (
-  `menu_id` INT NOT NULL AUTO_INCREMENT,
-  `title` VARCHAR(255) NOT NULL,
-  `price` DECIMAL(9) UNSIGNED NOT NULL DEFAULT 0,
-  `category` VARCHAR(45) NOT NULL,
-  PRIMARY KEY (`menu_id`),
-  UNIQUE INDEX `title_UNIQUE` (`title` ASC) VISIBLE)
-ENGINE = InnoDB;
+DROP TABLE IF EXISTS `LittleLemonDB`.`staffs` ;
 
-
--- -----------------------------------------------------
--- Table `LittleLemonDB`.`order_item`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`order_item` (
-  `order_id` INT NOT NULL,
-  `menu_id` INT NOT NULL,
-  `quantity` INT NOT NULL DEFAULT 1,
-  `price` DECIMAL(9) NOT NULL DEFAULT 0,
-  PRIMARY KEY (`order_id`, `menu_id`),
-  INDEX `fk_order_item_menu_idx` (`menu_id` ASC) VISIBLE,
-  CONSTRAINT `fk_order_item_order`
-    FOREIGN KEY (`order_id`)
-    REFERENCES `LittleLemonDB`.`order` (`order_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_order_item_menu`
-    FOREIGN KEY (`menu_id`)
-    REFERENCES `LittleLemonDB`.`menu` (`menu_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
--- Table `LittleLemonDB`.`staff`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`staff` (
+CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`staffs` (
   `staff_id` INT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(255) NOT NULL,
   `role` VARCHAR(45) NOT NULL,
   `salary` DECIMAL(9) NOT NULL DEFAULT 0,
   PRIMARY KEY (`staff_id`),
   UNIQUE INDEX `name_UNIQUE` (`name` ASC) VISIBLE)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `LittleLemonDB`.`menu_items`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `LittleLemonDB`.`menu_items` ;
+
+CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`menu_items` (
+  `menu_item_id` INT NOT NULL AUTO_INCREMENT,
+  `cours_name` VARCHAR(45) NULL,
+  `starter_name` VARCHAR(45) NULL,
+  `dessert_name` VARCHAR(45) NULL,
+  `menu_id` INT NOT NULL,
+  PRIMARY KEY (`menu_item_id`),
+  INDEX `fk_menu_item_menu_idx` (`menu_id` ASC) VISIBLE,
+  CONSTRAINT `fk_menu_item_menu`
+    FOREIGN KEY (`menu_id`)
+    REFERENCES `LittleLemonDB`.`menus` (`menu_id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
 

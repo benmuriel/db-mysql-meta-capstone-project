@@ -21,7 +21,7 @@ USE `LittleLemonDB` ;
 DROP TABLE IF EXISTS `LittleLemonDB`.`customers` ;
 
 CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`customers` (
-  `customer_id` INT NOT NULL,
+  `customer_id` INT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(45) NOT NULL,
   `mail` VARCHAR(45) NULL,
   `contact` VARCHAR(45) NULL,
@@ -57,7 +57,7 @@ DROP TABLE IF EXISTS `LittleLemonDB`.`menus` ;
 CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`menus` (
   `menu_id` INT NOT NULL AUTO_INCREMENT,
   `menu_name` VARCHAR(255) NOT NULL,
-  `price` DECIMAL(9) UNSIGNED NOT NULL DEFAULT 0,
+  `price` DECIMAL(9,2) UNSIGNED NOT NULL DEFAULT 0,
   `category` VARCHAR(45) NULL,
   `cuisine` VARCHAR(45) NOT NULL,
   PRIMARY KEY (`menu_id`),
@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`orders` (
   `order_id` INT NOT NULL AUTO_INCREMENT,
   `order_date` DATE NOT NULL,
   `quantity` INT UNSIGNED NOT NULL DEFAULT 1,
-  `total_cost` DECIMAL(9) UNSIGNED NOT NULL DEFAULT 0,
+  `total_cost` DECIMAL(9,2) UNSIGNED NOT NULL DEFAULT 0,
   `menu_id` INT NOT NULL,
   `customer_id` INT NOT NULL,
   PRIMARY KEY (`order_id`),
@@ -122,7 +122,7 @@ CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`staffs` (
   `staff_id` INT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(255) NOT NULL,
   `role` VARCHAR(45) NOT NULL,
-  `salary` DECIMAL(9) NOT NULL DEFAULT 0,
+  `salary` DECIMAL(9,2) NOT NULL DEFAULT 0,
   PRIMARY KEY (`staff_id`),
   UNIQUE INDEX `name_UNIQUE` (`name` ASC) VISIBLE)
 ENGINE = InnoDB;

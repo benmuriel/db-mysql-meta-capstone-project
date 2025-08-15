@@ -148,6 +148,175 @@ CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`menu_items` (
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
+USE `LittleLemonDB` ;
+
+-- -----------------------------------------------------
+-- Placeholder table for view `LittleLemonDB`.`OrderView`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`OrderView` (`order_id` INT, `order_date` INT, `quantity` INT, `total_cost` INT, `menu_id` INT, `customer_id` INT);
+
+-- -----------------------------------------------------
+-- procedure GetMaxQuantity
+-- -----------------------------------------------------
+
+USE `LittleLemonDB`;
+DROP procedure IF EXISTS `LittleLemonDB`.`GetMaxQuantity`;
+
+DELIMITER $$
+USE `LittleLemonDB`$$
+CREATE PROCEDURE GetMaxQuantity()
+BEGIN 
+ SELECT MAX(quantity) AS 'Max Quantity in Order'
+ FROM orders;
+END$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
+-- procedure CancelOrder
+-- -----------------------------------------------------
+
+USE `LittleLemonDB`;
+DROP procedure IF EXISTS `LittleLemonDB`.`CancelOrder`;
+
+DELIMITER $$
+USE `LittleLemonDB`$$
+CREATE PROCEDURE CancelOrder(orderID INT)
+BEGIN 
+ DELETE FROM  orders WHERE order_id = orderID;
+SELECT CONCAT('Order ',orderID,' IS CANCELLED');
+END$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
+-- procedure AddValidBooking
+-- -----------------------------------------------------
+
+USE `LittleLemonDB`;
+DROP procedure IF EXISTS `LittleLemonDB`.`AddValidBooking`;
+
+DELIMITER $$
+USE `LittleLemonDB`$$
+CREATE PROCEDURE AddValidBooking(bookingDate DATE, customerId INT, tableNumber INT)
+BEGIN
+START TRANSACTION;
+INSERT INTO bookings  (booking_date, table_number,customer_id)
+VALUES(bookingDate,tableNumber,customerId);
+IF (NOT EXISTS(SELECT * FROM bookings WHERE booking_date = bookingDate AND table_number = tableNumber)) THEN
+	COMMIT;
+	SELECT CONCAT('Table ',tableNumber, ' is now booked') AS 'Booking status' ;
+ELSE
+    ROLLBACK;
+    SELECT CONCAT('Table ',tableNumber, ' is already booked - booking cancelled') AS 'Booking status' ;
+END IF;
+END$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
+-- procedure CheckBooking
+-- -----------------------------------------------------
+
+USE `LittleLemonDB`;
+DROP procedure IF EXISTS `LittleLemonDB`.`CheckBooking`;
+
+DELIMITER $$
+USE `LittleLemonDB`$$
+CREATE PROCEDURE CheckBooking(bookingDate DATE, tableNumber INT)
+BEGIN
+	SELECT CASE WHEN EXISTS(SELECT * FROM bookings WHERE booking_date = bookingDate AND table_number = tableNumber) 
+    THEN CONCAT('Table ',tableNumber, ' is already booked') ELSE CONCAT('Table ',tableNumber, ' is free') END 
+    AS 'Booking status';
+END$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
+-- procedure AddBooking
+-- -----------------------------------------------------
+
+USE `LittleLemonDB`;
+DROP procedure IF EXISTS `LittleLemonDB`.`AddBooking`;
+
+DELIMITER $$
+USE `LittleLemonDB`$$
+CREATE PROCEDURE AddBooking( customerId INT, tableNumber INT,bookingDate DATE)
+BEGIN
+START TRANSACTION;
+INSERT INTO bookings  (booking_date, table_number,customer_id)
+VALUES(bookingDate,tableNumber,customerId);
+IF (NOT EXISTS(SELECT * FROM bookings WHERE booking_date = bookingDate AND table_number = tableNumber)) THEN
+	COMMIT;
+	SELECT 'New booking added' AS 'Confirmation' ;
+ELSE
+    ROLLBACK;
+    SELECT CONCAT('Table ',tableNumber, ' is already booked - booking cancelled') AS  'Confirmation' ;
+END IF;
+END$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
+--  routine1
+-- -----------------------------------------------------
+
+USE `LittleLemonDB`;
+DROP  IF EXISTS `LittleLemonDB`.`routine1`;
+
+DELIMITER $$
+USE `LittleLemonDB`$$
+$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
+-- procedure UpdateBooking
+-- -----------------------------------------------------
+
+USE `LittleLemonDB`;
+DROP procedure IF EXISTS `LittleLemonDB`.`UpdateBooking`;
+
+DELIMITER $$
+USE `LittleLemonDB`$$
+CREATE PROCEDURE UpdateBooking( bookingID INT,bookingDate DATE)
+BEGIN
+IF (EXISTS(SELECT * FROM bookings WHERE booking_id = bookingID)) THEN
+ UPDATE bookings SET booking_date = bookingDate WHERE booking_id = bookingID;
+ SELECT CONCAT('Booking ',bookingID, ' updated') AS  'Confirmation' ;
+ ELSE SELECT 'Booking not found' AS 'Confirmation' ;
+ END IF;
+END$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
+-- procedure CancelBooking
+-- -----------------------------------------------------
+
+USE `LittleLemonDB`;
+DROP procedure IF EXISTS `LittleLemonDB`.`CancelBooking`;
+
+DELIMITER $$
+USE `LittleLemonDB`$$
+CREATE PROCEDURE CancelBooking( bookingID INT)
+BEGIN
+IF (EXISTS(SELECT * FROM bookings WHERE booking_id = bookingID)) THEN
+ DELETE FROM bookings WHERE booking_id = bookingID;
+ SELECT CONCAT('Booking ',bookingID, ' cancelled') AS  'Confirmation' ;
+ ELSE SELECT 'Booking not found' AS 'Confirmation' ;
+ END IF;
+END$$
+
+DELIMITER ;
+
+-- -----------------------------------------------------
+-- View `LittleLemonDB`.`OrderView`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `LittleLemonDB`.`OrderView`;
+DROP VIEW IF EXISTS `LittleLemonDB`.`OrderView` ;
+USE `LittleLemonDB`;
+CREATE  OR REPLACE VIEW OrderView AS SELECT * FROM orders;
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
